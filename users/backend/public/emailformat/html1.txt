@@ -1,0 +1,9 @@
+<html>
+  <body>
+    <h1>
+    Hello [User's Name],
+
+Your One-Time Password (OTP) is:
+    </h1>
+  </body>
+</html>
