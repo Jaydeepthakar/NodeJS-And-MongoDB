@@ -1,0 +1,11 @@
+<h1>Our Products</h1>
+
+<div id="products-list">
+  <% products.forEach(product => { %>
+    <div class="product-card">
+      <h2><%= product.name %></h2>
+      <p class="price">$<%= product.price %></p>
+      <p><%= product.description %></p>
+    </div>
+  <% }); %>
+</div>

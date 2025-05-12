@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title><%= title %></title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <nav>
+      <a href="/" class="<%= currentPage === 'home' ? 'active' : '' %>">Home</a> |
+      <a href="/products" class="<%= currentPage === 'products' ? 'active' : '' %>">Products</a>
+    </nav>
+    
+    <%- body %>
+  </body>
+</html>
