@@ -9,13 +9,27 @@ const session = require('express-session');
 const MongoStore = require('connect-mongo');
 const { allowSecure } = require("./src/middlewara/allowsecure.js")
 const product = require('./src/products/routes');
+const passport = require('passport');
+const GoogleStrategy = require('passport-google-oauth2').Strategy;
+const FacebookStrategy = require('passport-facebook').Strategy;
+
+
 
 const app = express();
+
+
+
+
 
 app.use(cors());
 
 app.use(cookiesParser());
 app.use(express.json());
+
+
+
+
+
 
 app.use(express.urlencoded({ extended: false }));
 console.log('MongoDB URL:', process.env.MONGO_URL);
@@ -53,6 +67,83 @@ app.get("/set",(req, res) => {
     msg:"set"
   })
 })
+
+// google auth
+
+app.use (passport.initialize())
+app.use (passport.session())
+passport.use(new GoogleStrategy({
+    clientID:     process.env.GOOGLE_CLIENT_ID,
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    callbackURL: "http://localhost:3000/auth/google/callback",
+    passReqToCallback   : true
+  },(req, accessToken, refreshToken, profile, done) => {
+
+      return done(null, profile);
+  })
+);
+
+
+
+
+  passport.serializeUser( (user, done) => {
+   done(null, user)
+})
+
+passport.deserializeUser((user, done) => {
+  done (null, user)
+})
+
+app.get('/auth/google',
+  passport.authenticate('google', { scope: [ 'email', 'profile' ]
+}));
+
+app.get('/auth/google/callback', passport.authenticate( 'google', {
+   successRedirect: '/success',
+   failureRedirect: '/failure'
+}));
+
+
+app.get('/success', (req, res) => {
+  console.log("success",req.user);
+  res.send("success")
+})
+
+
+app.get('/failure', (req, res) => {
+  console.log("failure",req.user);
+  res.send("failure")
+});
+
+
+
+// facebook auth
+
+passport.serializeUser(function(user, done) {
+  done(null, user);
+});
+passport.deserializeUser(function(user, done) {
+  done(null, user);
+});
+passport.use(new FacebookStrategy({
+  clientID: process.env.FACEBOOK_CLIENT_ID,
+  clientSecret: process.env.FACEBOOK_CLIENT_SECRET,
+  callbackURL: "http://localhost:3000/auth/facebook/callback"
+},
+(accessToken, refreshToken, profile, done) =>{
+  return done(null, profile);
+}
+));
+
+app.get('/auth/error', (req, res) => res.send('Unknown Error'))
+app.get('/auth/facebook',passport.authenticate('facebook'));
+app.get('/auth/facebook/callback',passport.authenticate('facebook', {   successRedirect: '/success',
+   failureRedirect: '/failure'}))
+
+
+
+
+
 
 app.use("/userdata",routes)
 app.use("/products",product)

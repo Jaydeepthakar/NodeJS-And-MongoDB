@@ -1,0 +1,91 @@
+/* Container styling */
+.container {
+  max-width: 500px;
+  margin: 50px auto;
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  font-family: Arial, sans-serif;
+}
+
+/* Title styles */
+.title {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+/* Input styles */
+.input {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+/* Section styles */
+.section {
+  margin-bottom: 20px;
+}
+
+/* Subtitle styles */
+.subtitle {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+/* Button base styles */
+.button {
+  width: 100%;
+  padding: 10px;
+  border: none;
+  border-radius: 4px;
+  font-size: 15px;
+  cursor: pointer;
+  margin-bottom: 10px;
+}
+
+/* Button variants */
+.success {
+  background-color: #4CAF50;
+  color: white;
+}
+.success:hover {
+  background-color: #45a049;
+}
+
+.danger {
+  background-color: #f44336;
+  color: white;
+}
+.danger:hover {
+  background-color: #da190b;
+}
+
+.primary {
+  background-color: #008CBA;
+  color: white;
+}
+.primary:hover {
+  background-color: #007bb5;
+}
+
+/* User details box */
+.user-details {
+  margin-top: 20px;
+  padding: 15px;
+  background-color: #f0f0f0;
+  border-radius: 6px;
+}
+
+/* Details title */
+.details-title {
+  font-weight: bold;
+  margin-bottom: 10px;
+}

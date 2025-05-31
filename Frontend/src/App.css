@@ -1,0 +1,44 @@
+/* App.css */
+
+body, html, #root {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: Arial, sans-serif;
+}
+
+/* Layout container */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+/* Header styles */
+.header {
+  background-color: #222;
+  color: #fff;
+  padding: 15px;
+  text-align: center;
+}
+
+/* Navbar styles (assuming you're using some styling in Navbar component) */
+nav {
+  background-color: #333;
+  padding: 10px 15px;
+}
+
+nav a {
+  color: #fff;
+  margin-right: 15px;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+/* Main content area takes remaining space */
+.main-content {
+  flex: 1;
+  padding: 20px;
+  background-color: #f4f4f4;
+  overflow-y: auto; /* scroll if content overflows */
+}

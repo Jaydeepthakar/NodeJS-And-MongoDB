@@ -3,7 +3,10 @@ const { Product } = require("../products/model.js");
 const bcrypt = require("bcrypt");
 const { OTP_EMAIL } = require("./const");
 const session = require('express-session');
-const {sendEmail} = require("../utilitis/sendEmail.js");
+const { sendEmail, generateOTP } = require("../utilitis/sendEmail.js");
+const mongoose = require('mongoose');
+const ObjectId = mongoose.Types.ObjectId;
+const salt = bcrypt.genSaltSync(10);
 
 // ✅ Create a new user
 const createOne = async (req, res) => {
@@ -19,7 +22,7 @@ const createOne = async (req, res) => {
       return res.status(409).json({ success: false, msg: "User already exists with given email, username, or phone" });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, salt);
 
     const newUser = await User.create({
       username,
@@ -175,7 +178,7 @@ const resetPassword = async (req, res) => {
   const isMatch = await bcrypt.compare(oldPassword, user.password);
   if (!isMatch) return res.json({ msg: 'Old password not matched' });
 
-  const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+  const hashedNewPassword = await bcrypt.hash(newPassword, salt); 
   user.password = hashedNewPassword;
   await user.save();
 
@@ -188,26 +191,53 @@ const sendOtp = async (req, res) => {
   const user = await User.findOne({ email, username });
   if (!user) return res.json({ msg: 'User not found' });
 
-  const OTP = Math.floor(1000 + Math.random() * 9000); 
+  const OTP = generateOTP(); 
   const msg = OTP_EMAIL.html1 + OTP + OTP_EMAIL.html2;
   await sendEmail(email, 'OTP_SEND', msg);
   
   return res.json({ msg: 'OTP sent' });
 };
 
-// ✅ Forgot Password
+// forgot password
 const forgotPassword = async (req, res) => {
-  // Handle forgot password logic, similar to resetPassword
-  const { email } = req.body;
+  const { email, otp, newPassword } = req.body;
+  
   const user = await User.findOne({ email });
   if (!user) return res.json({ msg: 'User not found' });
+  
+  
+  if (!otp && !newPassword) {
+    const OTP = generateOTP();
+    user.resetOtp = OTP;
+    user.otpExpires = Date.now() + 10 * 60 * 1000;
+    await user.save();
 
-  const OTP = Math.floor(1000 + Math.random() * 9000);  // Generate OTP
-  const msg = OTP_EMAIL.html1 + OTP + OTP_EMAIL.html2;
-  await sendEmail(email, 'OTP_SEND', msg);
+    const msg = OTP_EMAIL.html1 + OTP + OTP_EMAIL.html2;
+    await sendEmail(email, 'Your OTP', msg);
+    return res.json({ msg: 'OTP sent to your email' });
+  }
 
-  return res.json({ msg: 'OTP sent to reset password' });
-};
+
+  // if (otp && newPassword) {
+  //   if (user.resetOtp !== otp || Date.now() > user.otpExpires) {
+  //     return res.json({ msg: 'Invalid or expired OTP' });
+  //   } 
+
+    
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+    user.password = hashedPassword;
+
+    
+    user.resetOtp = null;
+    user.otpExpires = null;
+    await user.save();
+
+    return res.json({ msg: 'Password reset successfully' });
+  };
+
+  
+
 
 module.exports = {
   createOne,
@@ -219,5 +249,5 @@ module.exports = {
   logout,
   resetPassword,
   sendOtp,
-  forgotPassword
+  forgotPassword,
 };

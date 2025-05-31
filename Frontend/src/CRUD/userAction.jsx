@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import api from "./api";
+import {api} from "../common/common";
+import "./UserAction.css";
 
 function UserActions() {
   const [userId, setUserId] = useState("");
@@ -76,23 +77,23 @@ function UserActions() {
   };
 
   return (
-    <div className="max-w-md mx-auto mt-10 p-6 bg-white rounded-xl shadow-md">
-      <h2 className="text-2xl font-bold mb-4 text-center">User Actions</h2>
+    <div className="container">
+      <h2 className="title">User Actions</h2>
       <input
         type="text"
         placeholder="User ID"
-        className="w-full p-2 border border-gray-300 rounded mb-4"
+        className="input"
         value={userId}
         onChange={(e) => setUserId(e.target.value)}
         required
       />
-      <div className="space-y-4 mb-6">
-        <h3 className="text-lg font-bold">Update User</h3>
+      <div className="section">
+        <h3 className="subtitle">Update User</h3>
         <input
           type="text"
           name="username"
           placeholder="New Username"
-          className="w-full p-2 border border-gray-300 rounded"
+          className="input"
           value={updateData.username}
           onChange={(e) =>
             setUpdateData((prev) => ({ ...prev, username: e.target.value }))
@@ -102,34 +103,25 @@ function UserActions() {
           type="email"
           name="email"
           placeholder="New Email"
-          className="w-full p-2 border border-gray-300 rounded"
+          className="input"
           value={updateData.email}
           onChange={(e) =>
             setUpdateData((prev) => ({ ...prev, email: e.target.value }))
           }
         />
-        <button
-          className="w-full bg-green-500 text-white p-2 rounded hover:bg-green-600"
-          onClick={handleUpdate}
-        >
+        <button className="button success" onClick={handleUpdate}>
           Update User
         </button>
       </div>
-      <button
-        className="w-full bg-red-500 text-white p-2 rounded hover:bg-red-600 mb-6"
-        onClick={handleDelete}
-      >
+      <button className="button danger" onClick={handleDelete}>
         Delete User
       </button>
-      <button
-        className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600"
-        onClick={handleGetOne}
-      >
+      <button className="button primary" onClick={handleGetOne}>
         Get User
       </button>
       {userData && (
-        <div className="mt-6 p-4 bg-gray-100 rounded">
-          <h3 className="font-bold mb-2">User Details:</h3>
+        <div className="user-details">
+          <h3 className="details-title">User Details:</h3>
           <pre>{JSON.stringify(userData, null, 2)}</pre>
         </div>
       )}

@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import api from "../common/common";
+import { api } from "../common/common"; 
+import "./register.css"; 
 
-function UserForm() {
+function Register() {
   const [formData, setformData] = useState({
     username: "",
     email: "",
@@ -23,14 +24,11 @@ function UserForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch(api.create.url,{    
+      const response = await fetch(api.create.url, {
         method: api.create.method,
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
-
       const data = await response.json();
       if (response.ok) {
         alert("User registered successfully!");
@@ -44,14 +42,14 @@ function UserForm() {
   };
 
   return (
-    <div className="max-w-md mx-auto mt-10 p-6 bg-white rounded-xl shadow-md">
-      <h2 className="text-2xl font-bold mb-4 text-center">User Registration</h2>
-      <form onSubmit={handleSubmit} className="space-y-4">
+    <div className="registration-container">
+      <h2 className="title">User Registration</h2>
+      <form onSubmit={handleSubmit} className="form">
         <input
           type="text"
           name="username"
           placeholder="Username"
-          className="w-full p-2 border border-gray-300 rounded"
+          className="input"
           value={formData.username}
           onChange={handleChange}
           required
@@ -60,7 +58,7 @@ function UserForm() {
           type="email"
           name="email"
           placeholder="Email"
-          className="w-full p-2 border border-gray-300 rounded"
+          className="input"
           value={formData.email}
           onChange={handleChange}
           required
@@ -69,14 +67,14 @@ function UserForm() {
           type="password"
           name="password"
           placeholder="Password"
-          className="w-full p-2 border border-gray-300 rounded"
+          className="input"
           value={formData.password}
           onChange={handleChange}
           required
         />
         <select
           name="gender"
-          className="w-full p-2 border border-gray-300 rounded"
+          className="select"
           value={formData.gender}
           onChange={handleChange}
           required
@@ -90,7 +88,7 @@ function UserForm() {
           type="tel"
           name="phone"
           placeholder="Phone Number"
-          className="w-full p-2 border border-gray-300 rounded"
+          className="input"
           value={formData.phone}
           onChange={handleChange}
           required
@@ -98,28 +96,23 @@ function UserForm() {
         <textarea
           name="address"
           placeholder="Address"
-          className="w-full p-2 border border-gray-300 rounded"
+          className="textarea"
           value={formData.address}
           onChange={handleChange}
           required
-        />
+        ></textarea>
         <input
           type="date"
           name="dateofbirth"
-          className="w-full p-2 border border-gray-300 rounded"
+          className="input"
           value={formData.dateofbirth}
           onChange={handleChange}
           required
         />
-        <button
-          type="submit"
-          className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600"
-        >
-          Submit
-        </button>
+        <button type="submit" className="submit-btn">Register</button>
       </form>
     </div>
   );
 }
 
-export default UserForm;
+export default Register;

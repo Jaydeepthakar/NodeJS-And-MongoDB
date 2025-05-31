@@ -1,0 +1,163 @@
+/* Navbar.css */
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #1f2937;
+  color: white;
+  padding: 12px 24px;
+  position: relative;
+}
+
+.navbar .logo {
+  font-size: 1.5rem;
+  font-weight: bold;
+  text-decoration: none;
+  color: white;
+}
+
+.nav-links {
+  display: flex;
+  list-style: none;
+  gap: 20px;
+}
+
+.nav-links a,
+.nav-links button {
+  color: white;
+  text-decoration: none;
+  background: none;
+  border: none;
+  font: inherit;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.nav-links a:hover,
+.nav-links button:hover {
+  color: #facc15;
+}
+
+.search-bar {
+  padding: 6px 10px;
+  border-radius: 4px;
+  border: none;
+}
+
+.menu-toggle {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  display: none;
+  color: white;
+  cursor: pointer;
+}
+
+/* Dropdown */
+.dropdown {
+  position: relative;
+}
+
+.dropdown-toggle {
+  cursor: pointer;
+}
+
+.dropdown-menu {
+  display: none;
+  position: absolute;
+  background-color: #374151;
+  top: 100%;
+  right: 0;
+  padding: 10px;
+  border-radius: 4px;
+  z-index: 1000;
+}
+
+.dropdown:hover .dropdown-menu {
+  display: block;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dropdown-menu a,
+.dropdown-menu button {
+  color: white;
+  text-decoration: none;
+  background: none;
+  border: none;
+  text-align: left;
+  padding: 5px;
+}
+
+.dropdown-menu a:hover,
+.dropdown-menu button:hover {
+  color: #facc15;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .nav-links {
+    display: none;
+    flex-direction: column;
+    background-color: #1f2937;
+    position: absolute;
+    top: 60px;
+    right: 10px;
+    width: 200px;
+    padding: 10px;
+    border-radius: 8px;
+  }
+
+  .nav-links.open {
+    display: flex;
+  }
+
+  .menu-toggle {
+    display: block;
+  }
+
+  .search-bar {
+    display: none;
+  }
+}
+
+/* Dropdown container */
+li.dropdown {
+  position: relative;
+  display: inline-block; /* or inline depending on your layout */
+}
+
+/* Dropdown toggle style */
+li.dropdown .dropdown-toggle {
+  padding: 10px 15px;
+  cursor: pointer;
+}
+
+/* Dropdown menu style */
+li.dropdown .dropdown-menu {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background-color: #fff;
+  min-width: 160px;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  z-index: 1000;
+}
+
+/* Show menu on hover */
+li.dropdown:hover .dropdown-menu {
+  display: block;
+}
+
+/* Items inside dropdown */
+li.dropdown .dropdown-menu li {
+  padding: 10px 15px;
+}
+
+li.dropdown .dropdown-menu li:hover {
+  background-color: #f1f1f1;
+}
