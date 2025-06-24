@@ -1,26 +1,25 @@
-import React from 'react';
-import './createProducts.css';
-import { api } from '../common/common';
+import React, { useState } from 'react';
+import { productApi } from '../common/common';
+import './createProducts.css'; // Assuming you have some styles for this component
 
-function CreateProducts() {
-
-  const [productData, setProductData] = React.useState({
+function CreateProduct({ onProductCreated }) {
+  const [productData, setProductData] = useState({
     name: '',
     description: '',
     price: '',
     category: '',
     stock: '',
-    images: ''
   });
-
-  const [loading, setLoading] = React.useState(false);
-  const [message, setMessage] = React.useState('');
+  const [imageFile, setImageFile] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState('');
 
   const handleChange = (e) => {
-    setProductData({
-      ...productData,
-      [e.target.name]: e.target.value
-    });
+    setProductData({ ...productData, [e.target.name]: e.target.value });
+  };
+
+  const handleImageChange = (e) => {
+    setImageFile(e.target.files[0]);
   };
 
   const handleSubmit = async (e) => {
@@ -28,27 +27,38 @@ function CreateProducts() {
     setLoading(true);
     setMessage('');
 
-    const dataToSend = {
-      ...productData,
-      price: parseFloat(productData.price),
-      stock: parseInt(productData.stock),
-    };
-
     try {
-      const response = await fetch(api.create.url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(dataToSend)
+      const formData = new FormData();
+      Object.entries(productData).forEach(([key, value]) => {
+        formData.append(key, value);
       });
 
-      if (response.ok) {
-        setMessage('Product created successfully!');
-      } else {
-        const errorData = await response.json();
-        setMessage(`Error: ${errorData.message || 'Failed to create product'}`);
+      if (imageFile) {
+        formData.append('image', imageFile);
       }
+
+      const response = await fetch(productApi.create.url, {
+        method: 'POST',
+        body: formData,
+        credentials: 'include', // ✅ cookie auth instead of token
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || 'Failed to create product');
+      }
+
+      setMessage('Product created successfully!');
+      setProductData({
+        name: '',
+        description: '',
+        price: '',
+        category: '',
+        stock: '',
+      });
+      setImageFile(null);
+      if (onProductCreated) onProductCreated();
     } catch (error) {
       setMessage(`Error: ${error.message}`);
     } finally {
@@ -59,7 +69,7 @@ function CreateProducts() {
   return (
     <div>
       <h2>Create Product</h2>
-      {message && <p>{message}</p>}
+      {message && <p style={{ color: message.includes('Error') ? 'red' : 'green' }}>{message}</p>}
       <form onSubmit={handleSubmit}>
         <input
           name="name"
@@ -97,10 +107,10 @@ function CreateProducts() {
           required
         />
         <input
-          name="images"
-          placeholder="Image URL"
-          value={productData.images}
-          onChange={handleChange}
+          type="file"
+          name="image"
+          onChange={handleImageChange}
+          accept="image/*"
         />
         <button type="submit" disabled={loading}>
           {loading ? 'Creating...' : 'Create'}
@@ -110,4 +120,4 @@ function CreateProducts() {
   );
 }
 
-export default CreateProducts;
+export default CreateProduct;

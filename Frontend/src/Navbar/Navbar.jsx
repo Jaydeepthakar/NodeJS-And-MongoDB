@@ -17,13 +17,13 @@ const Navbar = () => {
   const handleLogout = () => {
     localStorage.removeItem("user");
     setUser(null);
-    navigate("/login");
+    navigate("/login"); // Make sure this route exists
   };
 
   return (
     <nav className="navbar">
       <div className="navbar-left">
-        <Link className="logo">MyApp</Link>
+        <Link to="/" className="logo">MyApp</Link>
       </div>
 
       <div className="navbar-center">
@@ -35,31 +35,32 @@ const Navbar = () => {
                 <Link to="/create">Create Product</Link>
               </li>
               <li>
-                <Link to="/products">Show Products</Link>
+                <Link to="/products">Show Products</Link> {/* Make sure this route exists */}
               </li>
             </ul>
-            
           </li>
+
           <li>
             <Link to="/cart">Cart</Link>
           </li>
 
-          {user && user.isAdmin && (
+          {user?.isAdmin && (
             <li>
               <Link to="/admin">Admin Panel</Link>
             </li>
           )}
+
           {user ? (
             <li className="dropdown">
-              <span className="dropdown-toggle">{user.name || "User"}</span>
-              <div className="dropdown-menu">
-                <Link to="/profile">Profile</Link>
-                <button onClick={handleLogout}>Logout</button>
-              </div>
+              <span className="dropdown-toggle">{user.username || user.email || "User"}</span>
+              <ul className="dropdown-menu">
+                <li><Link to="/profile">Profile</Link></li>
+                <li><button onClick={handleLogout}>Logout</button></li>
+              </ul>
             </li>
           ) : (
             <li>
-              <Link className="Register-Login" to="/register">register</Link>
+              <Link className="Register-Login" to="/register">Register</Link>
             </li>
           )}
         </ul>

@@ -1,245 +1,112 @@
 const express = require('express');
 require('dotenv').config();
-const port = process.env.PORT
-const { connectDB } = require('./src/Config/dbconfig.js');
-const cookiesParser = require("cookie-parser")
-const routes = require('./src/user/routes');
 const cors = require('cors');
 const session = require('express-session');
 const MongoStore = require('connect-mongo');
-const { allowSecure } = require("./src/middlewara/allowsecure.js")
-const product = require('./src/products/routes');
+const cookieParser = require('cookie-parser');
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth2').Strategy;
 const FacebookStrategy = require('passport-facebook').Strategy;
+const { connectDB } = require('./src/Config/dbconfig');
+const { allowSecure } = require('./src/middlewara/allowsecure');
 
-
+const routes = require('./src/user/routes');
+const productRoutes = require('./src/products/routes');
 
 const app = express();
+const PORT = process.env.PORT || 3000;
 
+// ✅ CORS
+app.use(cors({
+  origin: 'http://localhost:5173',
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
 
-
-
-
-app.use(cors());
-
-app.use(cookiesParser());
+// ✅ Parsers
+app.use(cookieParser());
 app.use(express.json());
-
-
-
-
-
-
 app.use(express.urlencoded({ extended: false }));
-console.log('MongoDB URL:', process.env.MONGO_URL);
 
+// ✅ Session
 app.use(session({
   secret: process.env.session_secret_key,
+  resave: false,
+  saveUninitialized: false,
   store: MongoStore.create({
     mongoUrl: process.env.MONGO_URL,
     ttl: 14 * 24 * 60 * 60,
   }),
-  // cookie: { 
-  //   secure: true,
-  //   httpOnly: true
-  // }
+  cookie: {
+    secure: false,
+    httpOnly: true,
+    sameSite: 'lax',
+    maxAge: 14 * 24 * 60 * 60 * 1000,
+  },
 }));
 
+// ✅ Passport
+app.use(passport.initialize());
+app.use(passport.session());
 
-
-app.use(allowSecure);
-
-app.get("/get",(req, res) => {
-  console.log(req.cookies);
-  
-  res.json({
-    msg:"get"
-  })
-})
-
-app.get("/set",(req, res) => {
-  if (req.query["key"]) {
-    res.cookie(req.query["key"], req.query["value"])
-  }
-  
-  res.json({
-    msg:"set"
-  })
-})
-
-// google auth
-
-app.use (passport.initialize())
-app.use (passport.session())
 passport.use(new GoogleStrategy({
-    clientID:     process.env.GOOGLE_CLIENT_ID,
-    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: "http://localhost:3000/auth/google/callback",
-    passReqToCallback   : true
-  },(req, accessToken, refreshToken, profile, done) => {
-
-      return done(null, profile);
-  })
-);
-
-
-
-
-  passport.serializeUser( (user, done) => {
-   done(null, user)
-})
-
-passport.deserializeUser((user, done) => {
-  done (null, user)
-})
-
-app.get('/auth/google',
-  passport.authenticate('google', { scope: [ 'email', 'profile' ]
+  clientID: process.env.GOOGLE_CLIENT_ID,
+  clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+  callbackURL: "http://localhost:3000/auth/google/callback",
+  passReqToCallback: true
+}, (req, accessToken, refreshToken, profile, done) => {
+  return done(null, profile);
 }));
 
-app.get('/auth/google/callback', passport.authenticate( 'google', {
-   successRedirect: '/success',
-   failureRedirect: '/failure'
-}));
-
-
-app.get('/success', (req, res) => {
-  console.log("success",req.user);
-  res.send("success")
-})
-
-
-app.get('/failure', (req, res) => {
-  console.log("failure",req.user);
-  res.send("failure")
-});
-
-
-
-// facebook auth
-
-passport.serializeUser(function(user, done) {
-  done(null, user);
-});
-passport.deserializeUser(function(user, done) {
-  done(null, user);
-});
 passport.use(new FacebookStrategy({
   clientID: process.env.FACEBOOK_CLIENT_ID,
   clientSecret: process.env.FACEBOOK_CLIENT_SECRET,
   callbackURL: "http://localhost:3000/auth/facebook/callback"
-},
-(accessToken, refreshToken, profile, done) =>{
+}, (accessToken, refreshToken, profile, done) => {
   return done(null, profile);
-}
-));
+}));
 
-app.get('/auth/error', (req, res) => res.send('Unknown Error'))
-app.get('/auth/facebook',passport.authenticate('facebook'));
-app.get('/auth/facebook/callback',passport.authenticate('facebook', {   successRedirect: '/success',
-   failureRedirect: '/failure'}))
+passport.serializeUser((user, done) => done(null, user));
+passport.deserializeUser((user, done) => done(null, user));
 
+// ✅ Middleware
+app.use(allowSecure);
 
+// ✅ Social Auth Routes
+app.get('/auth/google', passport.authenticate('google', { scope: ['email', 'profile'] }));
+app.get('/auth/google/callback', passport.authenticate('google', {
+  successRedirect: '/success',
+  failureRedirect: '/failure',
+}));
 
+app.get('/auth/facebook', passport.authenticate('facebook'));
+app.get('/auth/facebook/callback', passport.authenticate('facebook', {
+  successRedirect: '/success',
+  failureRedirect: '/failure',
+}));
 
-
-
-app.use("/userdata",routes)
-app.use("/products",product)
-app.use("/uploads", express.static("uploads"));
-
-app.listen(port, () => {
-  connectDB()
-  console.log(`Example app listening on port ${port}`);
+app.get('/success', (req, res) => {
+  if (req.user) {
+    req.session.user = req.user;
+    res.redirect('http://localhost:5173');
+  } else {
+    res.redirect('/failure');
+  }
 });
 
+app.get('/failure', (req, res) => {
+  res.send("Login Failed");
+});
 
+// ✅ Routes
+app.use("/userdata", routes);
+app.use("/products", productRoutes);
+app.use("/uploads", express.static("uploads"));
 
-
-
-
-
-
-
-
-// frontend and backend form data server 
-
-
-
-// const express = require('express');
-// const mongoose = require('mongoose');
-// const cors = require('cors');
-
-// const app = express();
-// const PORT = 3000;
-
-// app.use(cors());
-// app.use(express.json());
-
-// // Connect to MongoDB
-// mongoose.connect('mongodb://localhost:27017/userdata')
-//   .then(() => console.log('MongoDB connected'))
-//   .catch(err => console.error(err));
-
-// // User schema
-// const userSchema = new mongoose.Schema({
-//   username: String,
-//   email: String,
-//   password: String,
-//   gender: String,
-//   phone: String,
-//   address: String,
-//   dateofbirth: String,
-// });
-
-// const User = mongoose.model('User', userSchema);
-
-// // Register route
-// // app.post('/register', async (req, res) => {
-// //   try {
-// //     console.log('Received Data:', req.body); // ✅ Log incoming data
-// //     const newUser = new User(req.body);
-// //     const savedUser = await newUser.save();
-// //     console.log('Saved User:', savedUser); // ✅ Log what's saved
-// //     res.status(201).json({ message: 'User registered successfully!' });
-// //   } catch (err) {
-// //     console.error('Register error:', err);
-// //     res.status(500).json({ message: 'Internal Server Error', error: err.message });
-// //   }
-// // });
-
-// app.get('/users', async (req, res) => {
-//   try {
-//     const users = await User.find();
-//     res.json(users);
-//   } catch (err) {
-//     res.status(500).json({ message: 'Error fetching users' });
-//   }
-// });
-
-
-
-// app.listen(PORT, () => {
-//   console.log(`Server is running on http://localhost:${PORT}`);
-// });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+// ✅ Start Server
+connectDB().then(() => {
+  app.listen(PORT, () => {
+    console.log(`✅ Server running at http://localhost:${PORT}`);
+  });
+});

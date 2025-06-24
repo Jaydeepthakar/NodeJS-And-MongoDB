@@ -1,13 +1,14 @@
 const requireAuth = (req, res, next) => {
-    console.log(req.session)
-  if (req.session?.user || req.isAuthenticated()) {
-    next();
-  } else {
-    res.status(401).json({ msg: "Not authorized" });
-    console.log(req.session?.user)
+  // Debug: Log session once
+  console.log("Session in requireAuth:", req.session);
+
+  // Check if session user exists
+  if (req.session && req.session.user) {
+    return next();
   }
+
+  // Unauthorized response
+  return res.status(401).json({ success: false, msg: "Unauthorized" });
 };
 
-module.exports = { requireAuth };
-
-
+module.exports = {requireAuth};

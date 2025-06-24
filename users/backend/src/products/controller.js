@@ -1,125 +1,113 @@
-const { Product } = require("../products/model");  
-const ObjectId = require("mongoose").Types.ObjectId; 
+const { Product } = require('../products/model');
 
-
-
-// Get all products  
-const getAllProducts = async (req, res) => {  
-  try {  
-    const products = await Product.find().select("-__v");  
-    return res.json({ success: true, data: products });  
-  } catch (error) {  
-    console.log(error);  
-    return res.status(500).json({ success: false, msg: "Error retrieving products" });  
-  }  
-};  
-
-// Get a single product by ID  
-const getProductById = async (req, res) => {  
-  try {  
-    const { productId } = req.params;  
-
-    if (!ObjectId.isValid(productId)) {
-      return res.status(400).json({ success: false, msg: "Invalid Product ID" });
-    }
-
-    const product = await Product.findById(productId).select("-__v");  
-
-    if (!product) {  
-      return res.status(404).json({ success: false, msg: "Product not found" });  
-    }  
-
-    return res.json({ success: true, data: product });  
-  } catch (error) {  
-    console.log(error);  
-    return res.status(500).json({ success: false, msg: "Error retrieving product" });  
-  }  
-};  
-
-// Create a new product  
+// ✅ Create a product (for logged-in user only)
 const createProduct = async (req, res) => {
   try {
-    const { name, description, price, category, stock } = req.body;
-    const images = req.file ? req.file.filename : "";
-
-    if (!name || !price || !stock) {
-      return res.status(400).json({ success: false, msg: "Name, price, and stock are required" });
+    if (!req.session.user) {
+      return res.status(401).json({ success: false, msg: 'Unauthorized' });
     }
 
-    const newProduct = await Product.create({
+    const { name, description, price} = req.body;
+    const imageUrl = req.file ? req.file.path : null;
+    const product = await Product.create({
       name,
       description,
       price,
-      category,
-      stock,
-      images, 
+      imageUrl,
+      owner: req.session.user.id, // associate with user
     });
 
-    console.log(newProduct)
-
-
-    return res.status(201).json({ success: true, msg: "Product created successfully", data: newProduct });
-  } catch (error) {
-    console.log(error);
-    return res.status(500).json({ success: false, msg: "Error creating product" });
+    return res.status(201).json({ success: true, msg: 'Product created', product });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ success: false, msg: 'Failed to create product' });
   }
 };
-// Update a product by ID  
-const updateProduct = async (req, res) => {  
-  try {  
-    const { productId } = req.params;  
 
-    if (!ObjectId.Types.ObjectId.isValid(productId)) {  
-      return res.status(400).json({ success: false, msg: "Invalid Product ID" });  
-    }  
+// ✅ Get all products of logged-in user
+const getMyProducts = async (req, res) => {
+  try {
+    if (!req.session.user) {
+      return res.status(401).json({ success: false, msg: 'Unauthorized' });
+    }
 
-    const updatedData = { ...req.body };  
-    if (req.file) {  
-      updatedData.images = req.file.filename;
-    }  
+    const products = await Product.find({ owner: req.session.user.id }).sort({ createdAt: -1 });
+    return res.json({ success: true, data: products });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ success: false, msg: 'Error fetching products' });
+  }
+};
 
-    const updatedProduct = await Product.findByIdAndUpdate(productId, updatedData, {  
-      new: true,  
-      runValidators: true,  
-    }).select("-__v");  
+// ✅ Get one product (only if owned by logged-in user)
+const getProductById = async (req, res) => {
+  try {
+    const { id } = req.params;
 
-    if (!updatedProduct) {  
-      return res.status(404).json({ success: false, msg: "Product not found" });  
-    }  
+    const product = await Product.findById(id);
+    if (!product) {
+      return res.status(404).json({ success: false, msg: 'Product not found' });
+    }
 
-    return res.json({ success: true, msg: "Product updated successfully", data: updatedProduct });  
-  } catch (error) {  
-    console.log(error);  
-    return res.status(500).json({ success: false, msg: "Error updating product" });  
-  }  
-};  
+    if (product.owner.toString() !== req.session.user?.id) {
+      return res.status(403).json({ success: false, msg: 'Access denied' });
+    }
 
-// Delete a product by ID  
-const deleteProduct = async (req, res) => {  
-  try {  
-    const { productId } = req.params;  
+    return res.json({ success: true, data: product });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ success: false, msg: 'Error fetching product' });
+  }
+};
 
-    if (!ObjectId.Types.ObjectId.isValid(productId)) {  
-      return res.status(400).json({ success: false, msg: "Invalid Product ID" });  
-    }  
+// ✅ Update product (only if owned by logged-in user)
+const updateProduct = async (req, res) => {
+  try {
+    const { id } = req.params;
 
-    const deletedProduct = await Product.findByIdAndDelete(productId);  
+    const product = await Product.findById(id);
+    if (!product) {
+      return res.status(404).json({ success: false, msg: 'Product not found' });
+    }
 
-    if (!deletedProduct) {  
-      return res.status(404).json({ success: false, msg: "Product not found" });  
-    }  
+    if (product.owner.toString() !== req.session.user?.id) {
+      return res.status(403).json({ success: false, msg: 'Access denied' });
+    }
 
-    return res.json({ success: true, msg: "Product deleted successfully" });  
-  } catch (error) {  
-    console.log(error);  
-    return res.status(500).json({ success: false, msg: "Error deleting product" });  
-  }  
-};  
+    const updated = await Product.findByIdAndUpdate(id, req.body, { new: true, runValidators: true });
+    return res.json({ success: true, msg: 'Product updated', data: updated });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ success: false, msg: 'Error updating product' });
+  }
+};
 
-module.exports = {  
-  getAllProducts,  
-  getProductById,  
-  createProduct,  
-  updateProduct,  
-  deleteProduct,  
-};  
+// ✅ Delete product (only if owned by logged-in user)
+const deleteProduct = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const product = await Product.findById(id);
+    if (!product) {
+      return res.status(404).json({ success: false, msg: 'Product not found' });
+    }
+
+    if (product.owner.toString() !== req.session.user?.id) {
+      return res.status(403).json({ success: false, msg: 'Access denied' });
+    }
+
+    await product.deleteOne();
+    return res.json({ success: true, msg: 'Product deleted successfully' });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ success: false, msg: 'Error deleting product' });
+  }
+};
+
+module.exports = {
+  createProduct,
+  getMyProducts,
+  getProductById,
+  updateProduct,
+  deleteProduct,
+};

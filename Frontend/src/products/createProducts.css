@@ -1,4 +1,19 @@
 /* Container styling */
+
+.product-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.product-card {
+  border: 1px solid #ccc;
+  padding: 1rem;
+  border-radius: 10px;
+  width: 200px;
+}
+
 .create-products-container {
   max-width: 600px;
   margin: 50px auto;

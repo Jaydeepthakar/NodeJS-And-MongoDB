@@ -1,31 +1,42 @@
-const express = require("express")
-const user = require("./controller")
-const { requireAuth } = require('../middlewara/auth')
-
-
-
+const express = require("express");
+const user = require("./controller");
+const { requireAuth } = require('../middlewara/auth');
 
 const routes = express.Router();
 
-        routes.post( "/create",user.createOne)
-        routes.route("/")
-                .get(requireAuth , user.getAll)
-                // .post(user.createOne)
-        routes.route("/:userID")
-                .get(user.getOne)
-                .put(user.updateOne)
-                .delete(user.deleteOne)
-        routes.post("/login", user.login)
-        routes.post("/logout", user.logout)
-        routes.post("/resetPassword",requireAuth, user.resetPassword)
-        routes.post("/sendOtp", user.sendOtp)
-        routes.post("/forgotPassword", user.forgotPassword)
+// 🧾 Auth and User Management
+routes.post("/create", user.createOne);
+routes.post("/login", user.login);
+routes.post("/logout", (req, res) => {
+  req.session.destroy(err => {
+    if (err) return res.status(500).json({ message: 'Logout failed' });
+    res.clearCookie('connect.sid'); // very important
+    res.json({ message: 'Logout successful' });
+  });
+});
 
-// routes.post('/:id/blogs', user.createBlog);
-// routes.get('/:id/blogs', user.getAllBlogs);
-// routes.get('/:id/blogs/:blogId', user.getSingleBlog);
-// routes.put('/:id/blogs/:blogId', user.updateBlog);
-// routes.delete('/:id/blogs/:blogId', user.deleteBlog);
-// routes.post('/login' , user.login);
+// 🛡️ Session check
+routes.get("/checkSession", (req, res) => {
+  console.log("Session:", req.session);
+  if (req.session?.user) {
+    res.json({ user: req.session.user });
+  } else {
+    res.status(401).json({ message: 'Not logged in' });
+  }
+});
 
-module.exports = routes ;            
+// 🔐 Auth-Protected routes
+routes.get("/getAll", requireAuth, user.getAll);
+routes.post("/resetPassword", requireAuth, user.resetPassword);
+
+// 🧠 OTP and Recovery
+routes.post("/sendOtp", user.sendOtp);
+routes.post("/forgotPassword", user.forgotPassword);
+
+// 👤 Individual user routes
+routes.route("/:userID")
+  .get(user.getOne)
+  .put(user.updateOne)
+  .delete(user.deleteOne);
+
+module.exports = routes;

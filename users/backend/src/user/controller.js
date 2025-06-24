@@ -139,23 +139,40 @@ const login = async (req, res) => {
 
     const user = await User.findOne({ email });
     if (!user) {
+      console.log("Login failed: user not found for email", email);
       return res.status(401).json({ success: false, msg: "Invalid credentials" });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
+    console.log("User provided:", password);
+    console.log("Stored password:", user.password);
+    console.log("Match?", isMatch);
+
     if (!isMatch) {
       return res.status(401).json({ success: false, msg: "Invalid credentials" });
     }
 
-    // Store user session
-    req.session.user = { id: user._id, username: user.username, email: user.email };
-    
-    return res.json({ success: true, msg: "Logged in successfully" });
+    req.session.user = {
+      id: user._id,
+      username: user.username,
+      email: user.email,
+    };
+
+    return res.json({
+      success: true,
+      msg: "Logged in successfully",
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+      },
+    });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ success: false, msg: "Login error" });
   }
 };
+
 
 // ✅ Logout (using session)
 const logout = (req, res) => {

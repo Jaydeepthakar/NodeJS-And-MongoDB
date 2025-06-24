@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-
+const userSchema = require('../user/model').userSchema;
 
 const productSchema = new mongoose.Schema({
   name: {
@@ -18,14 +18,10 @@ const productSchema = new mongoose.Schema({
   category: {
     type: String,
   },
-  stock: {
-    type: Number,
-    required: true,
-    min: 0,
-  },
-  images: {
-     type: String ,
-  },
+  imageUrl: {
+  type: String,
+  required: false
+},
   createdAt: {
     type: Date,
     default: Date.now,
@@ -33,10 +29,11 @@ const productSchema = new mongoose.Schema({
   updatedAt: {
     type: Date,
   },
-  user : {
-    type :mongoose.Schema.Types.ObjectId,
-    ref : "User"
-  }
+  owner: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "userSchema",
+    required: true,
+  },
 });
 
 
